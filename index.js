@@ -31,7 +31,7 @@ bot.command("start", (ctx) => {
     waitingForInput = true
 })
 
-bot.command("changeGroup", ctx => {
+bot.command("changegroup", ctx => {
     ctx.reply("Please choose the group for me to follow", createGroupSelectButtons())
     waitingForInput = true
 })
