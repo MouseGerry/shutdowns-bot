@@ -112,7 +112,4 @@ function tomorrow() {
     return today() + 1000 * 60 * 60 * 24
 }
 
-console.log(today())
-console.log(tomorrow())
-
 export { fetchTable, groupShutdownHours, shutdownHoursForGroup, today, tomorrow }
