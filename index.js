@@ -100,7 +100,8 @@ setTimeout(() => {
 
 setTimeout(() => {
     sendWarningMessages()
-    warningTimer = setInterval(() => {
+    warningTimer = setInterval( async () => {
+        await updateTable()
         sendWarningMessages()
     }, ONE_HOUR)
 }, ONE_HOUR - (Date.now() + KYIV_HOUR_ZONE * 60 * 60 * 1000 - WARNING_MESSAGE_START) % ONE_HOUR)
@@ -145,6 +146,11 @@ async function sendDailyMessages() {
 
 async function sendWarningMessages() {
     const current_hour = new Date().getUTCHours() + KYIV_HOUR_ZONE
+    /** @type {import('./api.js').Table | undefined} */
+    let nextDay = undefined;
+    if (current_hour === 23) {
+        nextDay = await fetchTable({next:true})
+    }
 
     for (let [userId, userGroup] of Object.entries(users)) {
 
@@ -159,7 +165,9 @@ async function sendWarningMessages() {
 
             if (hours[1] === undefined) {
                 // fething nextDay
-                let nextDay = await fetchTable({next:true})    
+                if (nextDay === undefined) 
+                    nextDay = await fetchTable({next: true})
+                
                 let nextHours = shutdownHoursForGroup(nextDay, userGroup.group)
                 if (nextHours[0][0] === 0) {
                     message += `\nExpecting to turn on at ${nextHours[0][1]}:00`
@@ -174,6 +182,10 @@ async function sendWarningMessages() {
             return;
         }
     } 
+}
+
+async function updateTable() {
+    table = await fetchTable({force: true})
 }
 
 function saveUsers() {
