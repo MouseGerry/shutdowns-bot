@@ -136,7 +136,7 @@ function saveGroup(userId, group) {
 async function sendDailyMessages() {
     let tomorrowTable = await fetchTable({next: true})
     for (let [userId, userGroup] of Object.entries(users)) {
-        let message = `Shutdown hours for group ${userGroup} for tomorrow:\n`
+        let message = `Shutdown hours for group ${userGroup.group} for tomorrow:\n`
         for (let hours of shutdownHoursForGroup(tomorrowTable, userGroup.group)) {
             message += `${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
         }
