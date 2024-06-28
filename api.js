@@ -9,24 +9,27 @@ let data = undefined
 /** @type {Number} */
 let lastFetched = 0
 
+const UTC_OFFSET = 3 * 60 * 60 * 1000
+
 const URL = "https://oblenergo.cv.ua/shutdowns/"
+const NEXT = "?next"
 
 const groupsRegex = /(<div id="inf\d+" data-id="\d+">([ \n]*<(s|u|o)>(мз|з|в)<\/(s|u|o)>[ \n]*){24}<\/div>)/gm
 const groupRegex = /(<(s|u|o)>(мз|з|в)<\/(s|u|o)>)/gm
 const replaceRegex = /(<(s|u|o)>)|(<\/(s|u|o)>)/gm
 
 /**
- * 
+ * @param {{force?: boolean, next?:boolean}} params
  * @returns {Promise<Table>}
  */
 function fetchTable(params = {force: false, next:false}) {
     return new Promise((resolve, reject) => {
 
-        if (data !== undefined && lastFetched > today() && !params.force) {
+        if (data !== undefined && lastFetched > today() && !params.force && !params.next) {
             resolve(data)
         }
 
-        fetch(URL)
+        fetch(URL + (params.next ? NEXT : ""))
             .then(data => data.text())
             .then(text => {
                 /** @type {Table} */
@@ -36,9 +39,9 @@ function fetchTable(params = {force: false, next:false}) {
 
                 if (shutdowns === null) {
                     reject("Cannot parse the site. Rewiew the parsing logic")
+                    return
                 }
 
-                // @ts-ignore
                 for (let groupInfoStr of shutdowns) {
                     const statesStr = groupInfoStr.match(groupRegex)
 
@@ -49,9 +52,11 @@ function fetchTable(params = {force: false, next:false}) {
                     table.push(states)
                 }
 
-                lastFetched = Date.now()
-                if (!params.next) 
+                if (!params.next)
+                {
                     data = table
+                    lastFetched = Date.now()
+                }
                 
                 resolve(table);
             })
@@ -100,11 +105,14 @@ function fetchTable(params = {force: false, next:false}) {
 
 function today() {
     let now = Date.now()
-    return now - (now % (1000 * 60 * 60 * 24))
+    return now - (now % (1000 * 60 * 60 * 24)) - UTC_OFFSET
 }
 
 function tomorrow() {
     return today() + 1000 * 60 * 60 * 24
 }
+
+console.log(today())
+console.log(tomorrow())
 
 export { fetchTable, groupShutdownHours, shutdownHoursForGroup, today, tomorrow }

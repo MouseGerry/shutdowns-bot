@@ -13,7 +13,7 @@ const KYIV_HOUR_ZONE = +3
 let table;
 (async () => table = await fetchTable())()
 
-/** @satisfies {Users} */
+/** @type {Users} */
 let users = {}
 loadUsers()
 
@@ -37,7 +37,7 @@ bot.command("changeGroup", ctx => {
 })
 
 bot.command("info", ctx => {
-    let group = users[ctx.from.id]
+    let group = users[ctx.from.id].group
 
     if (group === undefined) {
         return ctx.reply("Please select the group using /changeGroup command", keyboard(["/changeGroup"]).oneTime());
@@ -83,12 +83,13 @@ bot.on("message", ctx => {
 let warningTimer;
 let daylyMessageTimer;
 
+
+// hours * min * sec * millis
 const ONE_DAY = 24 * 60 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
 
-
-const DAYLY_MESSAGE_START = 10 * 60 * 1000
-const WARNING_MESSAGE_START = 30 * 60 * 1000
+const DAYLY_MESSAGE_START = 23 * 60 * 60 * 1000 // 23:00:00.000
+const WARNING_MESSAGE_START = 30 * 60 * 1000 // 00:30:00.000
 
 setTimeout(() => {
     sendDailyMessages()
@@ -126,23 +127,23 @@ function saveGroup(userId, group) {
     if (group === null) {
         delete users[userId];        
     } else {
-        users[userId] = group;
+        users[userId] = {group};
     }
     saveUsers();
 }
 
-function sendDailyMessages() {
+async function sendDailyMessages() {
+    let tomorrowTable = await fetchTable({next: true})
     for (let [userId, userGroup] of Object.entries(users)) {
-        let message = `Shutdown hours for group ${userGroup} for today:\n`
-        for (let hours of shutdownHoursForGroup(table, userGroup)) {
+        let message = `Shutdown hours for group ${userGroup} for tomorrow:\n`
+        for (let hours of shutdownHoursForGroup(tomorrowTable, userGroup.group)) {
             message += `${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
         }
         bot.telegram.sendMessage(userId, message, {disable_notification:true})
-
     }
 }
 
-function sendWarningMessages() {
+async function sendWarningMessages() {
     const current_hour = new Date().getUTCHours() + KYIV_HOUR_ZONE
     console.log(current_hour)
 
@@ -151,14 +152,27 @@ function sendWarningMessages() {
         let message = `The power in your area will shut down in 30 minutes.`
 
 
-        for (let hours of shutdownHoursForGroup(table, userGroup)) {
+        for (let hours of shutdownHoursForGroup(table, userGroup.group)) {
             console.log(hours)
-            if (hours[0] && (hours[0] - 1) === current_hour) {
-                message += hours[1] !== undefined ? `\nExpecting to turn on at ${hours[1]}:00` : ""
-                bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
-                return;
+            if (hours[0] && (hours[0] - 1) !== current_hour) {
+                continue
             }
 
+            if (hours[1] !== undefined) {
+                message += hours[1] !== undefined ? `\nExpecting to turn on at ${hours[1]}:00` : ""
+            } else {
+                // fething nextDay
+                let nextDay = await fetchTable({next:true})    
+                let nextHours = shutdownHoursForGroup(nextDay, userGroup.group)
+                if (nextHours[0][0] === 0) {
+                    message += `\nExpecting to turn on at ${nextHours[0][1]}:00`
+                } else {
+                    message += `\nExpecting to turn on at 00:00`
+                }
+            }
+
+            bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
+            return;
         }
 
     } 
