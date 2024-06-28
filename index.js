@@ -145,7 +145,6 @@ async function sendDailyMessages() {
 
 async function sendWarningMessages() {
     const current_hour = new Date().getUTCHours() + KYIV_HOUR_ZONE
-    console.log(current_hour)
 
     for (let [userId, userGroup] of Object.entries(users)) {
 
@@ -153,14 +152,12 @@ async function sendWarningMessages() {
 
 
         for (let hours of shutdownHoursForGroup(table, userGroup.group)) {
-            console.log(hours)
-            if (hours[0] && (hours[0] - 1) !== current_hour) {
+            // @ts-ignore
+            if ((hours[0] - 1) !== current_hour) {
                 continue
             }
 
-            if (hours[1] !== undefined) {
-                message += hours[1] !== undefined ? `\nExpecting to turn on at ${hours[1]}:00` : ""
-            } else {
+            if (hours[1] === undefined) {
                 // fething nextDay
                 let nextDay = await fetchTable({next:true})    
                 let nextHours = shutdownHoursForGroup(nextDay, userGroup.group)
@@ -169,12 +166,13 @@ async function sendWarningMessages() {
                 } else {
                     message += `\nExpecting to turn on at 00:00`
                 }
+            } else {
+                message += hours[1] !== undefined ? `\nExpecting to turn on at ${hours[1]}:00` : ""
             }
 
             bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
             return;
         }
-
     } 
 }
 
