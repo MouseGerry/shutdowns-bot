@@ -18,6 +18,8 @@ const groupsRegex = /(<div id="inf\d+" data-id="\d+">([ \n]*<(s|u|o)>(мз|з|в
 const groupRegex = /(<(s|u|o)>(мз|з|в)<\/(s|u|o)>)/gm
 const replaceRegex = /(<(s|u|o)>)|(<\/(s|u|o)>)/gm
 
+const TEN_MINUTES = 10 * 60 * 1000
+
 /**
  * @param {{force?: boolean, next?:boolean}} params
  * @returns {Promise<Table>}
@@ -25,7 +27,7 @@ const replaceRegex = /(<(s|u|o)>)|(<\/(s|u|o)>)/gm
 function fetchTable(params = {force: false, next:false}) {
     return new Promise((resolve, reject) => {
 
-        if (data !== undefined && lastFetched > today() && !params.force && !params.next) {
+        if (data !== undefined && lastFetched < Date.now() - TEN_MINUTES && !params.force && !params.next) {
             resolve(data)
         }
 
@@ -46,7 +48,7 @@ function fetchTable(params = {force: false, next:false}) {
                     const statesStr = groupInfoStr.match(groupRegex)
 
                     // @ts-ignore
-                    let states = statesStr.map(str => str.replace(replaceRegex, ""))
+                    const states = statesStr.map(str => str.replace(replaceRegex, ""))
 
                     // @ts-ignore
                     table.push(states)
@@ -103,13 +105,4 @@ function fetchTable(params = {force: false, next:false}) {
     }
 
 
-function today() {
-    let now = Date.now()
-    return now - (now % (1000 * 60 * 60 * 24)) - UTC_OFFSET
-}
-
-function tomorrow() {
-    return today() + 1000 * 60 * 60 * 24
-}
-
-export { fetchTable, groupShutdownHours, shutdownHoursForGroup, today, tomorrow }
+export { fetchTable, groupShutdownHours, shutdownHoursForGroup }

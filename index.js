@@ -10,9 +10,6 @@ import { keyboard } from 'telegraf/markup'
 
 const KYIV_HOUR_ZONE = +3
 
-let table;
-(async () => table = await fetchTable())()
-
 /** @type {Users} */
 let users = {}
 loadUsers()
@@ -36,14 +33,14 @@ bot.command("changegroup", ctx => {
     waitingForInput = true
 })
 
-bot.command("info", ctx => {
+bot.command("info", async (ctx) => {
     let group = users[ctx.from.id].group
 
     if (group === undefined) {
         return ctx.reply("Please select the group using /changeGroup command", keyboard(["/changeGroup"]).oneTime());
     }
 
-    let groupInfo = shutdownHoursForGroup(table, group)
+    let groupInfo = shutdownHoursForGroup(await fetchTable(), group)
     let message = `Shutdown hours for group ${group}:\n`
     for (let hours of groupInfo) {
         message += `💡${hours[0]}:00-` + (hours[1] ? `${hours[1]}:00` : "") + "\n"
@@ -52,7 +49,7 @@ bot.command("info", ctx => {
     ctx.reply(message)
 }) 
 
-bot.on("message", ctx => {
+bot.on("message", async (ctx) => {
     if (!ctx.text?.match(/^\d+$/))
         return
 
@@ -71,7 +68,7 @@ bot.on("message", ctx => {
         return
     }
 
-    let groupInfo = shutdownHoursForGroup(table, group)
+    let groupInfo = shutdownHoursForGroup(await fetchTable(), group)
     let message = `Shutdown hours for group ${group}:\n`
     for (let hours of groupInfo) {
         message += `💡${hours[0]}:00-` + (hours[1] ? `${hours[1]}:00` : "") + "\n"
@@ -80,9 +77,9 @@ bot.on("message", ctx => {
     ctx.reply(message)
 }) 
 
+
 let warningTimer;
 let daylyMessageTimer;
-
 
 // hours * min * sec * millis
 const ONE_DAY = 24 * 60 * 60 * 1000
@@ -98,10 +95,9 @@ setTimeout(() => {
     }, ONE_DAY)
 }, ONE_DAY - (Date.now() + KYIV_HOUR_ZONE * 60 * 60 * 1000 - DAYLY_MESSAGE_START) % ONE_DAY)
 
-setTimeout(() => {
+setTimeout(async () => {
     sendWarningMessages()
     warningTimer = setInterval( async () => {
-        await updateTable()
         sendWarningMessages()
     }, ONE_HOUR)
 }, ONE_HOUR - (Date.now() + KYIV_HOUR_ZONE * 60 * 60 * 1000 - WARNING_MESSAGE_START) % ONE_HOUR)
@@ -117,20 +113,6 @@ function createGroupSelectButtons() {
         ["13", "14", "15"], 
         ["16", "17", "18"]
     ]).oneTime()
-}
-
-/**
- * 
- * @param {Number} userId 
- * @param {Number | null} group  
- */
-function saveGroup(userId, group) {
-    if (group === null) {
-        delete users[userId];        
-    } else {
-        users[userId] = {group};
-    }
-    saveUsers();
 }
 
 async function sendDailyMessages() {
@@ -154,10 +136,10 @@ async function sendWarningMessages() {
 
     for (let [userId, userGroup] of Object.entries(users)) {
 
-        let message = `The power in your area will shut down in 30 minutes.`
+        let message = `The power in your area will shut down in 25 minutes.`
 
 
-        for (let hours of shutdownHoursForGroup(table, userGroup.group)) {
+        for (let hours of shutdownHoursForGroup(await fetchTable(), userGroup.group)) {
             // @ts-ignore
             if ((hours[0] - 1) !== current_hour) {
                 continue
@@ -184,9 +166,21 @@ async function sendWarningMessages() {
     } 
 }
 
-async function updateTable() {
-    table = await fetchTable({force: true})
+
+/**
+ * 
+ * @param {Number} userId 
+ * @param {Number | null} group  
+ */
+function saveGroup(userId, group) {
+    if (group === null) {
+        delete users[userId];
+    } else {
+        users[userId] = { group };
+    }
+    saveUsers();
 }
+
 
 function saveUsers() {
     fs.writeFile("./users.json", JSON.stringify(users), () => {})
