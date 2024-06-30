@@ -89,7 +89,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
 
 const DAYLY_MESSAGE_START = 23 * 60 * 60 * 1000 // 23:00:00.000
-const WARNING_MESSAGE_START = 30 * 60 * 1000 // 00:30:00.000
+const WARNING_MESSAGE_START = 35 * 60 * 1000 // 00:35:00.000
 
 setTimeout(() => {
     sendDailyMessages()
@@ -175,7 +175,7 @@ async function sendWarningMessages() {
                     message += `\nExpecting to turn on at 00:00`
                 }
             } else {
-                message += hours[1] !== undefined ? `\nExpecting to turn on at ${hours[1]}:00` : ""
+                message + `\nExpecting to turn on at ${hours[1]}:00`
             }
 
             bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
