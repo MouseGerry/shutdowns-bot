@@ -4,7 +4,7 @@
 
 import { Telegraf, Markup } from 'telegraf'
 import dotenv from 'dotenv'
-import { fetchTable, groupShutdownHours, shutdownHoursForGroup } from "./api.js"
+import { fetchTable, shutdownHoursForGroup } from "./api.js"
 import * as fs from "fs"
 import { keyboard } from 'telegraf/markup'
 
