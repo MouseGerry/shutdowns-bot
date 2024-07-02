@@ -157,7 +157,7 @@ async function sendWarningMessages() {
                     message += `\nExpecting to turn on at 00:00`
                 }
             } else {
-                message + `\nExpecting to turn on at ${hours[1]}:00`
+                message += `\nExpecting to turn on at ${hours[1]}:00`
             }
 
             bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
