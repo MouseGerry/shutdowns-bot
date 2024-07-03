@@ -127,7 +127,7 @@ async function sendDailyMessages() {
 }
 
 async function sendWarningMessages() {
-    const current_hour = new Date().getUTCHours() + KYIV_HOUR_ZONE
+    const current_hour = (new Date().getUTCHours() + KYIV_HOUR_ZONE) % 24
     /** @type {import('./api.js').Table | undefined} */
     let nextDay = undefined;
     if (current_hour === 23) {
