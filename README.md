@@ -1,5 +1,5 @@
 # No longer works
-Chernivtsi oblenergo connected cloundfare for protection. Can no longer obtain the information.
+Chernivtsi oblenergo connected cloudfare for protection. Can no longer obtain the information.
 
 # Shutdowns-bot
 A simple telegram bot that check the shutdown hours of power in Chernivtsi Oblat.
