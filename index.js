@@ -39,8 +39,8 @@ bot.command("start", (ctx) => {
 
 })
 
-bot.command("changegroup", ctx => {
-    ctx.reply(`{${LOCALIZATION[users[ctx.from.id].language ?? "en"].changegroup}`, createGroupSelectButtons())
+bot.command(["changegroup", "changeGroup"], ctx => {
+    ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].changegroup}`, createGroupSelectButtons())
     waitingForInput.push[ctx.from.id]
 })
 
@@ -48,7 +48,7 @@ bot.command("info", async (ctx) => {
     let group = users[ctx.from.id].group
 
     if (group === undefined) {
-        return ctx.reply(`{${LOCALIZATION[users[ctx.from.id].language ?? "en"].nogroupselected}`, keyboard(["/changeGroup"]).oneTime());
+        return ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].nogroupselected}`, keyboard(["/changeGroup"]).oneTime());
     }
 
     let groupInfo = shutdownHoursForGroup(await fetchTable(), group)
@@ -60,7 +60,24 @@ bot.command("info", async (ctx) => {
     ctx.reply(message)
 }) 
 
+bot.command(["changelanguage", "changeLanguage"], ctx => {
+    waitingForInput.push(ctx.from.id)
+    ctx.sendMessage("Select the language", keyboard([["en", "uk"]]).oneTime())
+})
+
 bot.on("message", async (ctx) => {
+    if (ctx?.text?.match(/(uk)|(en)/)) {
+        if (waitingForInput.includes(ctx.from.id)) {
+            saveLanguage(ctx.from.id, ctx?.text)
+
+            ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].languagechanged}`)
+        }
+
+        waitingForInput = waitingForInput.filter(id => id != ctx.from.id)
+        return;
+    }
+
+
     if (!ctx.text?.match(/^\d+$/))
         return
 
@@ -183,15 +200,24 @@ async function sendWarningMessages() {
 /**
  * 
  * @param {Number} userId 
- * @param {Number | null} group  
+ * @param {Number} group  
  */
 function saveGroup(userId, group) {
-    if (group === null) {
-        delete users[userId];
+    if (users[userId] !== undefined) {
+        users[userId].group = group; 
     } else {
-        users[userId] = { group };
+        users[userId] = {group: group}
     }
     saveUsers();
+}
+
+function saveLanguage(userId, language) {
+    if (users[userId] !== undefined) {
+        users[userId].language = language;
+    } else {
+        users[userId] = { language: language }
+    }
+    saveUsers()
 }
 
 

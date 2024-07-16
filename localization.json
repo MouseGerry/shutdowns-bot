@@ -8,7 +8,8 @@
         "groupselected": "Great! I will follow this group and keep you updated",
         "warning": "The power in your area will shut down in 25 minutes",
         "turningon": "Expecting to turn on at",
-        "fortomorrow": "for tomorrow"
+        "fortomorrow": "for tomorrow",
+        "languagechanged": "Language is now set to English"
     },
     
     "uk": {
@@ -20,6 +21,7 @@
         "groupselected": "Чудово! Я сілдкуватиму за цією групою та триматиму вас у курсі",
         "warning": "Електоропостачання у вашому регіоні відключиться через 25 хвилин",
         "turningon": "Заживлення очікується о",
-        "fortomorrow": "на завтра"
+        "fortomorrow": "на завтра",
+        "languagechanged": "Мова зміненна на українську"
     }
 }
