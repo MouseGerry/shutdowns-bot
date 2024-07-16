@@ -1,5 +1,7 @@
 # No longer works
 Chernivtsi oblenergo connected cloudfare for protection. Can no longer obtain the information.
+# Or maybe it works
+They removed cloudfare xdd
 
 # Shutdowns-bot
 A simple telegram bot that checks the shutdown hours of power in Chernivtsi Oblat.
