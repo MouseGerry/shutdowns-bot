@@ -5,7 +5,7 @@
 
 import { Telegraf, Markup } from 'telegraf'
 import dotenv from 'dotenv'
-import { fetchTable, shutdownHoursForGroup } from "./api.js"
+import { fetchTable, shutdownHoursForGroup, tablesEquals } from "./api.js"
 import * as fs from "fs"
 import { keyboard } from 'telegraf/markup'
 
@@ -13,6 +13,9 @@ import LOCALIZATION from "./localization.json" with {type: "json"}
 
 const KYIV_HOUR_ZONE = +3
 
+/** @type {import('./api.js').Table} */
+let previousTable;
+(async () => previousTable = await fetchTable())()
 
 /** @type {Users} */
 let users = {}
@@ -191,9 +194,27 @@ async function sendWarningMessages() {
             }
 
             bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
-            return;
+            break
         }
     } 
+}
+
+async function sendMessageOnScheduleChange() {
+    const newTable = await fetchTable({force: true});
+    if (tablesEquals(previousTable, newTable)) return;
+
+    const current_hour = (new Date().getUTCHours() + KYIV_HOUR_ZONE) % 24
+
+    for (let [userId, userInfo] of Object.entries(users)) {
+        if (!userInfo.group) continue;
+        let message = `${LOCALIZATION[userInfo.language ?? "en"].schedulechange}`
+        
+        for (let hours of shutdownHoursForGroup(newTable, userInfo.group)) {
+            message += `💡${hours[0]}:00-` + (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
+        }
+
+        bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })
+    }
 }
 
 

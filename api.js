@@ -66,43 +66,60 @@ function fetchTable(params = {force: false, next:false}) {
     })
 }
 
-    /**
-     * 
-     * @param {Table} table 
-     * @param {Number} group
-     */
-    function shutdownHoursForGroup(table, group) {
-        return groupShutdownHours(table[group-1]);
-    }
+/**
+ * 
+ * @param {Table} table 
+ * @param {Number} group
+ */
+function shutdownHoursForGroup(table, group) {
+    return groupShutdownHours(table[group-1]);
+}
 
-    /**
-     * @param {Group} group 
-     * @returns {(number | undefined)[][]}
-     */
-    function groupShutdownHours(group) {
-        /** @type { (number | undefined)[][] } */
-        const hours = []
-        /** @type {number | undefined} */
-        let current = undefined;
-        group.forEach((state, indx) => {
-            if (current === undefined) {
-                if (state === "в") {
-                    current = indx
-                }
-            } else {
-                if (state === "мз" || state === "з") {
-                    hours.push([current, indx])
-                    current = undefined
-                }
+/**
+ * @param {Group} group 
+ * @returns {(number | undefined)[][]}
+ */
+function groupShutdownHours(group) {
+    /** @type { (number | undefined)[][] } */
+    const hours = []
+    /** @type {number | undefined} */
+    let current = undefined;
+    group.forEach((state, indx) => {
+        if (current === undefined) {
+            if (state === "в") {
+                current = indx
             }
-        })
-
-        if (current !== undefined) {
-            hours.push([current, undefined])
+        } else {
+            if (state === "мз" || state === "з") {
+                hours.push([current, indx])
+                current = undefined
+            }
         }
+    })
 
-        return hours
+    if (current !== undefined) {
+        hours.push([current, undefined])
     }
 
+    return hours
+}
 
-export { fetchTable, groupShutdownHours, shutdownHoursForGroup }
+/**
+ * 
+ * @param {Table} table1 
+ * @param {Table} table2 
+ * 
+ * @returns {boolean}
+ */
+function tablesEquals(table1, table2) {
+    for (let i = 0; i < table1.length; i++) {
+        for (let j = 0; j < table1[i].length; i++) {
+            if (table1[i][j] !== table2[i][j]) return false
+        }
+    }
+
+    return true
+}
+
+
+export { fetchTable, groupShutdownHours, shutdownHoursForGroup, tablesEquals }
