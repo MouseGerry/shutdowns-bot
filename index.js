@@ -33,8 +33,10 @@ let waitingForInput = [];
 
 bot.command("start", (ctx) => {
     let language = ctx.from.language_code
-    if (language !== "uk") {
-        language = "en"
+    if (language === "uk") {
+        saveLanguage(ctx.from.id, "uk")
+    } else {
+        saveLanguage(ctx.from.id, "en")
     }
 
     ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].welcome}`, createGroupSelectButtons())
@@ -111,6 +113,7 @@ bot.on("message", async (ctx) => {
 
 let warningTimer;
 let daylyMessageTimer;
+let scheduleChangeTimer;
 
 // hours * min * sec * millis
 const ONE_DAY = 24 * 60 * 60 * 1000
@@ -118,6 +121,7 @@ const ONE_HOUR = 60 * 60 * 1000
 
 const DAYLY_MESSAGE_START = 23 * 60 * 60 * 1000 // 23:00:00.000
 const WARNING_MESSAGE_START = 35 * 60 * 1000 // 00:35:00.000
+const SCHEDULE_CHANGE_START = 2 * 60 * 1000 // 00:02:00.000
 
 setTimeout(() => {
     sendDailyMessages()
@@ -132,6 +136,14 @@ setTimeout(async () => {
         sendWarningMessages()
     }, ONE_HOUR)
 }, ONE_HOUR - (Date.now() + KYIV_HOUR_ZONE * 60 * 60 * 1000 - WARNING_MESSAGE_START) % ONE_HOUR)
+
+
+setTimeout(() => {
+    sendMessageOnScheduleChange()
+    scheduleChangeTimer = setInterval(() => {
+        sendMessageOnScheduleChange()
+    }, ONE_HOUR / 2)
+}, (ONE_HOUR / 2) - (Date.now() + KYIV_HOUR_ZONE *  60 * 60 *100 - SCHEDULE_CHANGE_START) % (ONE_HOUR / 2))
 
 bot.launch();
 
@@ -202,8 +214,12 @@ async function sendWarningMessages() {
 async function sendMessageOnScheduleChange() {
     const newTable = await fetchTable({force: true});
     if (tablesEquals(previousTable, newTable)) return;
+    previousTable = newTable;
 
     const current_hour = (new Date().getUTCHours() + KYIV_HOUR_ZONE) % 24
+    if (current_hour === 0) {
+        return
+    } 
 
     for (let [userId, userInfo] of Object.entries(users)) {
         if (!userInfo.group) continue;
