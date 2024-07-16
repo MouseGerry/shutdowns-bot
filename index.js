@@ -1,6 +1,7 @@
 // @ts-check
 
-/** @typedef {Record<Number, {group: Number}>} Users */
+/** @typedef {"en" | "uk"} Language*/
+/** @typedef {Record<Number, {group?: Number, language?: Language}>} Users */
 
 import { Telegraf, Markup } from 'telegraf'
 import dotenv from 'dotenv'
@@ -8,7 +9,11 @@ import { fetchTable, shutdownHoursForGroup } from "./api.js"
 import * as fs from "fs"
 import { keyboard } from 'telegraf/markup'
 
+import LOCALIZATION from "./localization.json"
+
+
 const KYIV_HOUR_ZONE = +3
+
 
 /** @type {Users} */
 let users = {}
@@ -17,31 +22,38 @@ loadUsers()
 
 dotenv.config()
 // @ts-ignore
-const bot = new Telegraf(process.env.BOT_TOKEN)
+const bot = new Telegraf(process.env.BOT_TOKen)
 
 
-let waitingForInput = false;
+/** @type {number[]} */
+let waitingForInput = [];
 
 
 bot.command("start", (ctx) => {
-    ctx.reply("Sup mate, please choose the group for me to follow", createGroupSelectButtons())
-    waitingForInput = true
+    let language = ctx.from.language_code
+    if (language !== "uk") {
+        language = "en"
+    }
+
+    ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].welcome}`, createGroupSelectButtons())
+    waitingForInput.push(ctx.from.id)
+
 })
 
 bot.command("changegroup", ctx => {
-    ctx.reply("Please choose the group for me to follow", createGroupSelectButtons())
-    waitingForInput = true
+    ctx.reply(`{${LOCALIZATION[users[ctx.from.id].language ?? "en"].changegroup}`, createGroupSelectButtons())
+    waitingForInput.push[ctx.from.id]
 })
 
 bot.command("info", async (ctx) => {
     let group = users[ctx.from.id].group
 
     if (group === undefined) {
-        return ctx.reply("Please select the group using /changeGroup command", keyboard(["/changeGroup"]).oneTime());
+        return ctx.reply(`{${LOCALIZATION[users[ctx.from.id].language ?? "en"].nogroupselected}`, keyboard(["/changeGroup"]).oneTime());
     }
 
     let groupInfo = shutdownHoursForGroup(await fetchTable(), group)
-    let message = `Shutdown hours for group ${group}:\n`
+    let message = `${LOCALIZATION[users[ctx.from.id].language ?? "en"].infomessage} ${group}:\n`
     for (let hours of groupInfo) {
         message += `💡${hours[0]}:00-` + (hours[1] ? `${hours[1]}:00` : "") + "\n"
     }
@@ -56,20 +68,20 @@ bot.on("message", async (ctx) => {
     let group = + ctx.text;
 
     if (group > 18) {
-        ctx.reply("Such group does not exist")
+        ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].groupdoesnotexist}`)
         return
     }
 
-    if (waitingForInput) {
-        waitingForInput = false
+    if (waitingForInput.includes(ctx.from.id)) {
+        waitingForInput = waitingForInput.filter(id => id != ctx.from.id)
         saveGroup(ctx.message.from.id, group)
         
-        ctx.reply("Great! I will follow this group and keep you updated!")
+        ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].groupselected}`)
         return
     }
 
     let groupInfo = shutdownHoursForGroup(await fetchTable(), group)
-    let message = `Shutdown hours for group ${group}:\n`
+    let message = `${LOCALIZATION[users[ctx.from.id].language ?? "en"].infomessage} ${group}:\n`
     for (let hours of groupInfo) {
         message += `💡${hours[0]}:00-` + (hours[1] ? `${hours[1]}:00` : "") + "\n"
     }
@@ -117,10 +129,12 @@ function createGroupSelectButtons() {
 
 async function sendDailyMessages() {
     let tomorrowTable = await fetchTable({next: true})
-    for (let [userId, userGroup] of Object.entries(users)) {
-        let message = `Shutdown hours for group ${userGroup.group} for tomorrow:\n`
-        for (let hours of shutdownHoursForGroup(tomorrowTable, userGroup.group)) {
-            message += `${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
+    for (let [userId, { group, language } ] of Object.entries(users)) {
+        if (group === undefined) continue;
+
+        let message = `${LOCALIZATION[language ?? "en"].infomessage} ${group} ${LOCALIZATION[language ?? "en"].fortomorrow}:\n`
+        for (let hours of shutdownHoursForGroup(tomorrowTable, group)) {
+            message += `💡${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
         }
         bot.telegram.sendMessage(userId, message, {disable_notification:true})
     }
@@ -134,12 +148,12 @@ async function sendWarningMessages() {
         nextDay = await fetchTable({next:true})
     }
 
-    for (let [userId, userGroup] of Object.entries(users)) {
+    for (let [userId, userInfo] of Object.entries(users)) {
 
-        let message = `The power in your area will shut down in 25 minutes.`
+        let message = `${LOCALIZATION[userInfo.language ?? "en"].warning}`
+        if (userInfo.group === undefined) continue
 
-
-        for (let hours of shutdownHoursForGroup(await fetchTable(), userGroup.group)) {
+        for (let hours of shutdownHoursForGroup(await fetchTable(), userInfo.group)) {
             // @ts-ignore
             if ((hours[0] - 1) !== current_hour) {
                 continue
@@ -150,14 +164,14 @@ async function sendWarningMessages() {
                 if (nextDay === undefined) 
                     nextDay = await fetchTable({next: true})
                 
-                let nextHours = shutdownHoursForGroup(nextDay, userGroup.group)
+                let nextHours = shutdownHoursForGroup(nextDay, userInfo.group)
                 if (nextHours[0][0] === 0) {
-                    message += `\nExpecting to turn on at ${nextHours[0][1]}:00`
+                    message += `\n${LOCALIZATION[userInfo.language ?? "en"].turningon} ${nextHours[0][1]}:00`
                 } else {
-                    message += `\nExpecting to turn on at 00:00`
+                    message += `\n${LOCALIZATION[userInfo.language ?? "en"].turningon} 00:00`
                 }
             } else {
-                message += `\nExpecting to turn on at ${hours[1]}:00`
+                message += `\n${LOCALIZATION[userInfo.language ?? "en"].turningon} ${hours[1]}:00`
             }
 
             bot.telegram.sendMessage(userId, message, { disable_notification: (current_hour > 22 || current_hour < 7) })

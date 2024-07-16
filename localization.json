@@ -1,0 +1,25 @@
+{
+    "en": {
+        "welcome": "Sup mate, please choose the group for me to follow",
+        "changegroup": "Please choose the group for me to follow",
+        "nogroupselected": "Please select the group using /changeGroup command",
+        "infomessage": "Shutdown hours for group",
+        "groupdoesnotexist": "Such group does not exist",
+        "groupselected": "Great! I will follow this group and keep you updated",
+        "warning": "The power in your area will shut down in 25 minutes",
+        "turningon": "Expecting to turn on at",
+        "fortomorrow": "for tomorrow"
+    },
+    
+    "uk": {
+        "welcome": "Вітаю, будь ласка, виберіть групу за якою я буду слідкувати",
+        "changegroup": "Будь ласка, виберіть групу за якою я буду слідкувати",
+        "nogroupselected": "Будь ласка, виберіть групу написавши /changeGroup",
+        "infomessage": "Години відключення для групи",
+        "groupdoesnotexist": "Такої групи не існує",
+        "groupselected": "Чудово! Я сілдкуватиму за цією групою та триматиму вас у курсі",
+        "warning": "Електоропостачання у вашому регіоні відключиться через 25 хвилин",
+        "turningon": "Заживлення очікується о",
+        "fortomorrow": "на завтра"
+    }
+}
