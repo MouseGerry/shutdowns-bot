@@ -21,7 +21,7 @@ loadUsers()
 
 dotenv.config()
 // @ts-ignore
-const bot = new Telegraf(process.env.BOT_TOKen)
+const bot = new Telegraf(process.env.BOT_TOKEN)
 
 
 /** @type {number[]} */
