@@ -9,8 +9,7 @@ import { fetchTable, shutdownHoursForGroup } from "./api.js"
 import * as fs from "fs"
 import { keyboard } from 'telegraf/markup'
 
-import LOCALIZATION from "./localization.json"
-
+import LOCALIZATION from "./localization.json" with {type: "json"}
 
 const KYIV_HOUR_ZONE = +3
 
