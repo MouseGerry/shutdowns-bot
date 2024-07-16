@@ -40,8 +40,8 @@ bot.command("start", (ctx) => {
 })
 
 bot.command(["changegroup", "changeGroup"], ctx => {
+    waitingForInput.push(ctx.from.id)
     ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].changegroup}`, createGroupSelectButtons())
-    waitingForInput.push[ctx.from.id]
 })
 
 bot.command("info", async (ctx) => {
@@ -66,14 +66,14 @@ bot.command(["changelanguage", "changeLanguage"], ctx => {
 })
 
 bot.on("message", async (ctx) => {
-    if (ctx?.text?.match(/(uk)|(en)/)) {
+    if (ctx.text?.match(/(uk)|(en)/)) {
         if (waitingForInput.includes(ctx.from.id)) {
             saveLanguage(ctx.from.id, ctx?.text)
 
             ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].languagechanged}`)
+            waitingForInput = waitingForInput.filter(id => id != ctx.from.id)
         }
 
-        waitingForInput = waitingForInput.filter(id => id != ctx.from.id)
         return;
     }
 
@@ -81,7 +81,7 @@ bot.on("message", async (ctx) => {
     if (!ctx.text?.match(/^\d+$/))
         return
 
-    let group = + ctx.text;
+    let group = +ctx.text;
 
     if (group > 18) {
         ctx.reply(`${LOCALIZATION[users[ctx.from.id].language ?? "en"].groupdoesnotexist}`)
