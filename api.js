@@ -113,7 +113,7 @@ function groupShutdownHours(group) {
  */
 function tablesEquals(table1, table2) {
     for (let i = 0; i < table1.length; i++) {
-        for (let j = 0; j < table1[i].length; i++) {
+        for (let j = 0; j < table1[i].length; j++) {
             if (table1[i][j] !== table2[i][j]) return false
         }
     }

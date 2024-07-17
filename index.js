@@ -143,7 +143,7 @@ setTimeout(() => {
     scheduleChangeTimer = setInterval(() => {
         sendMessageOnScheduleChange()
     }, ONE_HOUR / 2)
-}, (ONE_HOUR / 2) - (Date.now() + KYIV_HOUR_ZONE *  60 * 60 *100 - SCHEDULE_CHANGE_START) % (ONE_HOUR / 2))
+}, (ONE_HOUR / 2) - (Date.now() + KYIV_HOUR_ZONE *  60 * 60 * 1000 - SCHEDULE_CHANGE_START) % (ONE_HOUR / 2))
 
 bot.launch();
 
