@@ -5,7 +5,7 @@
 
 import { Telegraf, Markup } from 'telegraf'
 import dotenv from 'dotenv'
-import { fetchTable, shutdownHoursForGroup, tablesEquals } from "./api.js"
+import { fetchTable, shutdownHoursForGroup, tableDiff, tablesEquals } from "./api.js"
 import * as fs from "fs"
 import { keyboard } from 'telegraf/markup'
 
@@ -163,10 +163,18 @@ async function sendDailyMessages() {
     for (let [userId, { group, language } ] of Object.entries(users)) {
         if (group === undefined) continue;
 
-        let message = `${LOCALIZATION[language ?? "en"].infomessage} ${group} ${LOCALIZATION[language ?? "en"].fortomorrow}:\n`
-        for (let hours of shutdownHoursForGroup(tomorrowTable, group)) {
-            message += `💡${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
+        let message;
+
+        const shutDownHours = shutdownHoursForGroup(tomorrowTable, group)
+        if (shutDownHours.length === 0) {
+            message  = `${LOCALIZATION[language ?? "en"].noshutdowntomorrow}`
+        } else {
+            message = `${LOCALIZATION[language ?? "en"].infomessage} ${group} ${LOCALIZATION[language ?? "en"].fortomorrow}:\n`
+            for (let hours of shutdownHoursForGroup(tomorrowTable, group)) {
+                message += `💡${hours[0]}:00-`+ (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'
+            }
         }
+
         bot.telegram.sendMessage(userId, message, {disable_notification:true})
     }
 }
@@ -213,7 +221,11 @@ async function sendWarningMessages() {
 
 async function sendMessageOnScheduleChange() {
     const newTable = await fetchTable({force: true});
-    if (tablesEquals(previousTable, newTable)) return;
+    const diff = tableDiff(previousTable, newTable) 
+    if (diff.every(d => d === false)) {
+        return
+    };
+
     previousTable = newTable;
 
     const current_hour = (new Date().getUTCHours() + KYIV_HOUR_ZONE) % 24
@@ -223,7 +235,9 @@ async function sendMessageOnScheduleChange() {
 
     for (let [userId, userInfo] of Object.entries(users)) {
         if (!userInfo.group) continue;
-        let message = `${LOCALIZATION[userInfo.language ?? "en"].schedulechange}`
+        if (diff[userInfo.group - 1] === false) continue;
+
+        let message = `${LOCALIZATION[userInfo.language ?? "en"].schedulechange}\n`
         
         for (let hours of shutdownHoursForGroup(newTable, userInfo.group)) {
             message += `💡${hours[0]}:00-` + (hours[1] === undefined ? `` : `${hours[1]}:00`) + '\n'

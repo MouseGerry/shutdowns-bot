@@ -121,5 +121,17 @@ function tablesEquals(table1, table2) {
     return true
 }
 
+function tableDiff(table1, table2) {
+    const diff = new Array(table1.length).fill(false)
+    for (let i = 0; i < table1.length; i++) {
+        for (let j = 0; j < table1[i].length; j++) {
+            if (table1[i][j] !== table2[i][j])
+                diff[i] = true
+        }
+    }
 
-export { fetchTable, groupShutdownHours, shutdownHoursForGroup, tablesEquals }
+    return diff
+}
+
+
+export { fetchTable, groupShutdownHours, shutdownHoursForGroup, tablesEquals, tableDiff }

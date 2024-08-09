@@ -10,7 +10,8 @@
         "turningon": "Expecting to turn on at",
         "fortomorrow": "for tomorrow",
         "languagechanged": "Language is now set to English",
-        "schedulechange": "The schedule has changed\nNew schedule:"
+        "schedulechange": "The schedule has changed\nNew schedule:",
+        "noshutdowntomorrow": "No shutdowns for tomorrow. Enjoy a great day :)"
     },
     
     "uk": {
@@ -24,6 +25,7 @@
         "turningon": "Заживлення очікується о",
         "fortomorrow": "на завтра",
         "languagechanged": "Мова зміненна на українську",
-        "schedulechange": "Розклад відключень змінився\nНовий розклад:"
+        "schedulechange": "Розклад відключень змінився\nНовий розклад:",
+        "noshutdowntomorrow": "Відключень на завтра не заплановано. Насолоджуйтесь чудовим днем :)"
     }
 }
