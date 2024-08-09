@@ -40,7 +40,7 @@ function fetchTable(params = {force: false, next:false}) {
                 const shutdowns = text.match(groupsRegex)
 
                 if (shutdowns === null) {
-                    reject("Cannot parse the site. Rewiew the parsing logic")
+                    reject("Cannot parse the site. Rewiew the parsing logic\n Trying to parse:\n" + text)
                     return
                 }
 
